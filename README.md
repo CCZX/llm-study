@@ -1,6 +1,6 @@
 # LLM 学习笔记
 
-这是一个面向大模型学习的 Python 实践项目。当前内容聚焦 NumPy 数组基础、广播、向量化和矩阵运算，并结合大模型中常见的 `(batch, sequence, hidden)` 数据形状进行练习。
+这是一个面向大模型学习的 Python 实践项目。当前内容覆盖 NumPy、数值稳定性、Pandas、数据清洗与可视化，并通过葡萄酒质量报告完成第二周综合实践。
 
 ## 项目内容
 
@@ -10,14 +10,23 @@
 │   ├── 第08天-NumPy数组.md          # NumPy 数组讲义
 │   ├── 第08天-NumPy数组-练习.py     # 带自动检查的练习
 │   ├── 第09天-广播向量化与矩阵运算.md      # 广播与矩阵运算讲义
-│   └── 第09天-广播向量化与矩阵运算-练习.py # 带自动检查的练习
+│   ├── 第09天-广播向量化与矩阵运算-练习.py # 带自动检查的练习
+│   ├── 第10天-数值函数与数值稳定性.md       # 数值稳定性讲义
+│   ├── 第10天-数值函数与数值稳定性-练习.py  # 数学函数练习
+│   ├── 第11天-Pandas基础.md                 # Pandas 基础讲义
+│   ├── 第11天-Pandas基础-练习.py            # 表格操作练习
+│   ├── 第12天-数据清洗分组统计与可视化.md    # 数据分析讲义
+│   ├── 第12天-数据清洗分组统计与可视化-练习.py
+│   ├── 第13至14天-葡萄酒质量数据报告.md      # 第二周项目指南
+│   ├── data/                                # 第 11、12 天样例数据
+│   └── week2_data_analysis/                 # 第二周项目模板
 └── Untitled.ipynb                   # NumPy 实验 Notebook
 ```
 
 ## 环境要求
 
 - Python 3.11 或更高版本
-- NumPy
+- NumPy、Pandas、Matplotlib
 - JupyterLab（运行 Notebook 时需要）
 
 ## 快速开始
@@ -28,7 +37,7 @@
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install numpy jupyterlab
+python -m pip install numpy pandas matplotlib jupyterlab pytest
 ```
 
 Windows PowerShell 使用下面的命令激活虚拟环境：
@@ -43,8 +52,9 @@ Windows PowerShell 使用下面的命令激活虚拟环境：
 
 1. 阅读 [`第一阶段/第08天-NumPy数组.md`](第一阶段/第08天-NumPy数组.md)，完成[第 8 天练习](第一阶段/第08天-NumPy数组-练习.py)。
 2. 阅读 [`第一阶段/第09天-广播向量化与矩阵运算.md`](第一阶段/第09天-广播向量化与矩阵运算.md)，完成[第 9 天练习](第一阶段/第09天-广播向量化与矩阵运算-练习.py)。
-3. 打开 `Untitled.ipynb`，运行示例并尝试修改数组形状和运算方式。
-4. 将练习文件中赋值右侧的 `...` 替换为 NumPy 表达式，根据自动检查结果修正答案。
+3. 依次学习[第 10 天](第一阶段/第10天-数值函数与数值稳定性.md)、[第 11 天](第一阶段/第11天-Pandas基础.md)和[第 12 天](第一阶段/第12天-数据清洗分组统计与可视化.md)，完成各自练习。
+4. 按[第 13～14 天项目指南](第一阶段/第13至14天-葡萄酒质量数据报告.md)完成葡萄酒质量数据报告。
+5. 将练习文件中的 `...` 替换为自己的实现，根据自动检查结果修正答案。
 
 启动 JupyterLab：
 
@@ -57,6 +67,9 @@ jupyter lab
 ```bash
 python "第一阶段/第08天-NumPy数组-练习.py"
 python "第一阶段/第09天-广播向量化与矩阵运算-练习.py"
+python "第一阶段/第10天-数值函数与数值稳定性-练习.py"
+python "第一阶段/第11天-Pandas基础-练习.py"
+python "第一阶段/第12天-数据清洗分组统计与可视化-练习.py"
 ```
 
 脚本会为每道题输出 `[通过]`、`[未通过]` 或 `[待完成]`，未填写的题目不会中断后续检查。
@@ -95,6 +108,9 @@ Python 与数学基础 → PyTorch → Transformer 原理 → 开源模型 → R
 - 理解大模型中常见的 `(batch, sequence, hidden)` 张量结构
 - 掌握广播、向量化、点积和矩阵乘法
 - 使用批量矩阵运算实现线性变换和余弦相似度
+- 实现数值稳定的 Sigmoid、Softmax、MSE 和交叉熵
+- 使用 Pandas 完成数据检查、过滤、清洗、分组与合并
+- 使用 Matplotlib 绘图并识别相关性与数据泄漏的局限
 
 ### 第二阶段：深度学习与 PyTorch（3～4 周）
 
@@ -192,3 +208,5 @@ Python 与数学基础 → PyTorch → Transformer 原理 → 开源模型 → R
 - [NumPy 数组索引](https://numpy.org/doc/stable/user/basics.indexing.html)
 - [NumPy 广播](https://numpy.org/doc/stable/user/basics.broadcasting.html)
 - [NumPy 矩阵乘法](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
+- [Pandas 10 分钟入门](https://pandas.pydata.org/docs/user_guide/10min.html)
+- [Matplotlib Pyplot 教程](https://matplotlib.org/stable/tutorials/pyplot.html)

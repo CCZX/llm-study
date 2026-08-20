@@ -1,0 +1,5 @@
+model,parameters_b,family
+TinyLM,0.5,dense
+SmallLM,1.5,dense
+BaseLM,7.0,dense
+UnusedLM,13.0,mixture

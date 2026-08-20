@@ -1,0 +1,10 @@
+experiment_id,model,dataset,accuracy,latency_ms,quantized,notes
+exp-001,TinyLM,dev,0.82,120,false,baseline
+exp-002,SmallLM,dev,0.88,95,false,good balance
+exp-003,BaseLM,test,0.91,180,false,high accuracy
+exp-004,TinyLM,test,0.86,80,true,
+exp-005,SmallLM,test,,90,true,missing metric
+exp-006,BaseLM,dev,0.89,150,true,quantized
+exp-006,BaseLM,dev,0.89,150,true,quantized
+exp-007,SmallLM,dev,0.93,70,true,best
+exp-008,TinyLM,test,0.75,60,true,fast

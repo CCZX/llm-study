@@ -1,0 +1,11 @@
+run_id,model,task,score,latency_ms,gpu_memory_gb
+r01,TinyLM,classification,0.78,40,3.2
+r02,TinyLM,qa,0.72,55,3.4
+r03,SmallLM,classification,0.86,90,7.8
+r04,SmallLM,qa,,110,8.0
+r05,BaseLM,classification,0.91,180,14.5
+r06,BaseLM,qa,0.88,210,
+r06,BaseLM,qa,0.88,210,
+r07,TinyLM,summarization,0.69,60,3.5
+r08,SmallLM,summarization,0.80,120,8.2
+r09,BaseLM,summarization,0.85,230,15.0
