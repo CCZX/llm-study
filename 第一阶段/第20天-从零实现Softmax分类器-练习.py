@@ -44,20 +44,72 @@ def stratified_split_indices(
     seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """逐类别划分并分别打乱三个集合。"""
-    # TODO：替换下面的 ...。
-    return ...
+    labels = np.asarray(labels)
+    if labels.ndim != 1:
+        raise ValueError("labels 必须是一维数组")
+    if not 0.0 <= train_ratio <= 1.0:
+        raise ValueError("train_ratio 必须在 [0, 1] 范围内")
+    if not 0.0 <= valid_ratio <= 1.0:
+        raise ValueError("valid_ratio 必须在 [0, 1] 范围内")
+    if train_ratio + valid_ratio > 1.0:
+        raise ValueError("train_ratio 与 valid_ratio 之和不能超过 1")
+
+    rng = np.random.default_rng(seed)
+    train_parts: list[np.ndarray] = []
+    valid_parts: list[np.ndarray] = []
+    test_parts: list[np.ndarray] = []
+
+    for class_id in np.unique(labels):
+        class_indices = np.flatnonzero(labels == class_id)
+        rng.shuffle(class_indices)
+
+        train_end = int(len(class_indices) * train_ratio)
+        valid_end = train_end + int(len(class_indices) * valid_ratio)
+        train_parts.append(class_indices[:train_end])
+        valid_parts.append(class_indices[train_end:valid_end])
+        test_parts.append(class_indices[valid_end:])
+
+    if train_parts:
+        train = np.concatenate(train_parts)
+        valid = np.concatenate(valid_parts)
+        test = np.concatenate(test_parts)
+    else:
+        train = np.empty(0, dtype=np.int64)
+        valid = np.empty(0, dtype=np.int64)
+        test = np.empty(0, dtype=np.int64)
+
+    rng.shuffle(train)
+    rng.shuffle(valid)
+    rng.shuffle(test)
+    return train, valid, test
 
 
 def one_hot(labels: np.ndarray, class_count: int) -> np.ndarray:
     """把类别编号转换成 one-hot 矩阵。"""
-    # TODO：替换下面的 ...。
-    return ...
+    labels = np.asarray(labels)
+    if labels.ndim != 1:
+        raise ValueError("labels 必须是一维数组")
+    if not isinstance(class_count, (int, np.integer)) or class_count <= 0:
+        raise ValueError("class_count 必须是正整数")
+    if not np.issubdtype(labels.dtype, np.integer):
+        raise TypeError("labels 必须包含整数类别编号")
+    if labels.size and (labels.min() < 0 or labels.max() >= class_count):
+        raise ValueError("labels 中的类别编号超出有效范围")
+
+    result = np.zeros((len(labels), class_count), dtype=np.float64)
+    result[np.arange(len(labels)), labels] = 1.0
+    return result
 
 
 def stable_softmax(logits: np.ndarray) -> np.ndarray:
     """沿最后一个维度计算稳定 Softmax。"""
-    # TODO：替换下面的 ...。
-    return ...
+    logits = np.asarray(logits, dtype=np.float64)
+    if logits.ndim == 0 or logits.shape[-1] == 0:
+        raise ValueError("logits 的最后一个维度必须包含至少一个类别")
+
+    shifted = logits - np.max(logits, axis=-1, keepdims=True)
+    exponentials = np.exp(shifted)
+    return exponentials / np.sum(exponentials, axis=-1, keepdims=True)
 
 
 def loss_and_gradients(
@@ -67,14 +119,40 @@ def loss_and_gradients(
     bias: np.ndarray,
 ) -> tuple[float, np.ndarray, np.ndarray]:
     """返回平均交叉熵、grad_weight 和 grad_bias。"""
-    # TODO：替换下面的 ...。
-    return ...
+    x = np.asarray(x, dtype=np.float64)
+    labels = np.asarray(labels)
+    weight = np.asarray(weight, dtype=np.float64)
+    bias = np.asarray(bias, dtype=np.float64)
+
+    if x.ndim != 2 or weight.ndim != 2 or bias.ndim != 1:
+        raise ValueError("x、weight 和 bias 的维度必须分别为 2、2 和 1")
+    if len(x) == 0:
+        raise ValueError("x 不能为空")
+    if labels.ndim != 1 or len(labels) != len(x):
+        raise ValueError("labels 必须是与 x 样本数相同的一维数组")
+    if x.shape[1] != weight.shape[0] or weight.shape[1] != len(bias):
+        raise ValueError("x、weight 与 bias 的形状不匹配")
+
+    targets = one_hot(labels, weight.shape[1])
+    logits = x @ weight + bias
+    probabilities = stable_softmax(logits)
+
+    # log(sum(exp(shifted))) - shifted[target] 比先取概率再取对数更稳定。
+    shifted = logits - np.max(logits, axis=1, keepdims=True)
+    log_normalizers = np.log(np.exp(shifted).sum(axis=1))
+    correct_logits = shifted[np.arange(len(labels)), labels]
+    loss = float(np.mean(log_normalizers - correct_logits))
+
+    grad_logits = (probabilities - targets) / len(x)
+    grad_weight = x.T @ grad_logits
+    grad_bias = np.sum(grad_logits, axis=0)
+    return loss, grad_weight, grad_bias
 
 
 def predict(x: np.ndarray, weight: np.ndarray, bias: np.ndarray) -> np.ndarray:
     """返回每个样本的预测类别编号。"""
-    # TODO：无需计算 Softmax，直接利用 logits。
-    return ...
+    logits = np.asarray(x) @ np.asarray(weight) + np.asarray(bias)
+    return np.argmax(logits, axis=1)
 
 
 def train_classifier(
@@ -85,8 +163,34 @@ def train_classifier(
     epochs: int = 500,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """零初始化训练，返回 weight、bias 和每轮更新前的损失。"""
-    # TODO：替换下面的 ...。
-    return ...
+    x = np.asarray(x, dtype=np.float64)
+    labels = np.asarray(labels)
+    if x.ndim != 2:
+        raise ValueError("x 必须是二维数组")
+    if labels.ndim != 1 or len(labels) != len(x):
+        raise ValueError("labels 必须是与 x 样本数相同的一维数组")
+    if len(x) == 0:
+        raise ValueError("训练数据不能为空")
+    if not isinstance(class_count, (int, np.integer)) or class_count <= 0:
+        raise ValueError("class_count 必须是正整数")
+    if not isinstance(epochs, (int, np.integer)) or epochs < 0:
+        raise ValueError("epochs 必须是非负整数")
+    if not np.isfinite(learning_rate) or learning_rate <= 0:
+        raise ValueError("learning_rate 必须是有限正数")
+
+    # 在训练开始前验证标签范围，避免部分更新后才报错。
+    one_hot(labels, class_count)
+    weight = np.zeros((x.shape[1], class_count), dtype=np.float64)
+    bias = np.zeros(class_count, dtype=np.float64)
+    history = np.empty(epochs, dtype=np.float64)
+
+    for epoch in range(epochs):
+        loss, grad_weight, grad_bias = loss_and_gradients(x, labels, weight, bias)
+        history[epoch] = loss
+        weight -= learning_rate * grad_weight
+        bias -= learning_rate * grad_bias
+
+    return weight, bias, history
 
 
 def confusion_matrix(
@@ -95,8 +199,27 @@ def confusion_matrix(
     class_count: int,
 ) -> np.ndarray:
     """行是真实类别，列是预测类别。"""
-    # TODO：替换下面的 ...。
-    return ...
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    if y_true.ndim != 1 or y_pred.ndim != 1 or len(y_true) != len(y_pred):
+        raise ValueError("y_true 与 y_pred 必须是等长的一维数组")
+    if not isinstance(class_count, (int, np.integer)) or class_count <= 0:
+        raise ValueError("class_count 必须是正整数")
+    if not np.issubdtype(y_true.dtype, np.integer) or not np.issubdtype(
+        y_pred.dtype, np.integer
+    ):
+        raise TypeError("y_true 与 y_pred 必须包含整数类别编号")
+    if y_true.size and (
+        y_true.min() < 0
+        or y_pred.min() < 0
+        or y_true.max() >= class_count
+        or y_pred.max() >= class_count
+    ):
+        raise ValueError("类别编号超出有效范围")
+
+    matrix = np.zeros((class_count, class_count), dtype=np.int64)
+    np.add.at(matrix, (y_true, y_pred), 1)
+    return matrix
 
 
 def numerical_gradient(
